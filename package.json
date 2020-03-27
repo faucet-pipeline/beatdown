@@ -1,6 +1,6 @@
 {
 	"name": "beatdown",
-	"version": "0.0.0",
+	"version": "1.0.0",
 	"description": "simplified JavaScript module bundling",
 	"author": "FND",
 	"license": "Apache-2.0",

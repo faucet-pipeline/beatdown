@@ -5,6 +5,7 @@ let path = require("path");
 let FIXTURES_DIR = path.resolve(__dirname, "fixtures");
 let CONSOLE = console;
 
+exports.FIXTURES_DIR = FIXTURES_DIR;
 exports.fixturePath = filepath => path.resolve(FIXTURES_DIR, filepath);
 
 exports.consoleMock = {
