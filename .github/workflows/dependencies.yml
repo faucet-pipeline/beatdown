@@ -1,0 +1,18 @@
+name: dependencies
+on:
+  schedule:
+    - cron:  "0 5 * * 1" # every Monday at 5 AM
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v1
+        - uses: actions/setup-node@v1
+          with:
+              node-version: 14
+        - run: npm install -g npm-check-updates
+        - run: ./bin/update-dependencies
+          env:
+              GITHUB_TOKEN: ${{ secrets.github_token }}
+              DEPENDENCIES_TOKEN: ${{ secrets.DEPENDENCIES_TOKEN }}
+              DEPENDENCIES_USER: fnd # required due to personal access token
