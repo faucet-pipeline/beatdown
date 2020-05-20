@@ -29,10 +29,30 @@ fi
 git remote set-url "$remote_name" "$repo_uri"
 git push --force-with-lease "$remote_name" "$target_branch"
 
+api_request() {
+	method="$1"
+	shift
+	path="$1"
+	shift
+	curl -u "$DEPENDENCIES_USER:$DEPENDENCIES_TOKEN" -X "$method" "$@" \
+			"https://api.github.com/repos/${GITHUB_REPOSITORY}${path}"
+}
+
+# determine whether an open pull request already exists
+org=`echo "$GITHUB_REPOSITORY" | sed 's#/.*##'`
+api_request GET "/pulls?state=open&head=$org:$target_branch" > prs.json
+pr=`node -p -e 'let prs = require("./prs.json"); prs.length > 0 && prs[0].number'`
+if [ "$pr" != "false" ]; then
+	# add comment to existing PR
+	api_request POST "/issues/$pr/comments" --data-binary @- <<EOF
+{
+	"body": "🤖 dependencies updated"
+}
+EOF
+	exit 0
+fi
 # create pull request
-curl -u "$DEPENDENCIES_USER:$DEPENDENCIES_TOKEN" \
-	-X POST "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls" \
-	--data-binary @- <<EOF
+api_request POST "/pulls" --data-binary @- <<EOF
 {
 	"title": "$pr_title",
 	"head": "$target_branch",
