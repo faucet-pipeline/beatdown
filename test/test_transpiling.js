@@ -1,6 +1,7 @@
 /* global suite, test */
 "use strict";
 
+let generateTranspiler = require("../pkg/esnext");
 let { Bundle } = require("../lib/bundle");
 let { Config } = require("../lib/config");
 let { FIXTURES_DIR, fixturePath } = require("./util");
@@ -17,7 +18,7 @@ let warn = (...msg) => console.error(...msg);let lipsum = lang => \`[$\{lang}] l
 	`.trim());
 	/* eslint-enable max-len */
 
-	bundle = makeBundle("./index.esnext.js", { esnext: true });
+	bundle = makeBundle("./index.esnext.js", {});
 	code = await bundle.compile();
 	assertSame(code, `
 var warn = function warn() {
@@ -34,9 +35,7 @@ var warn = function warn() {
 
 test("Browserslist support", async () => {
 	let bundle = makeBundle("./index.esnext.js", {
-		esnext: {
-			browsers: ["current Node"]
-		}
+		browsers: ["current Node"]
 	});
 	let code = await bundle.compile();
 	/* eslint-disable max-len */
@@ -50,9 +49,7 @@ test("selectively skipping transpilation", async () => {
 	let cwd = process.cwd();
 	process.chdir(FIXTURES_DIR); // FIXME: smell
 	let bundle = makeBundle("./index.esnext.js", {
-		esnext: {
-			exclude: ["mylib"]
-		}
+		exclude: ["mylib"]
 	});
 	let code = await bundle.compile();
 	process.chdir(cwd);
@@ -69,11 +66,14 @@ var warn = function warn() {
 	/* eslint-enable max-len */
 });
 
-function makeBundle(entryPoint, options) {
+function makeBundle(entryPoint, esnext) {
 	let config = new Config(fixturePath(entryPoint), {
 		compact: true,
-		resolve: true,
-		...options
+		resolve: true
 	});
+	if(esnext) {
+		let plugin = generateTranspiler(esnext);
+		config.addPlugin(plugin);
+	}
 	return new Bundle(config);
 }
